@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1b2033">
+  <title>峡谷直升机</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="game-shell">
+    <header class="hud-panel top-panel">
+      <div class="brand-block">
+        <p class="eyebrow">Helicopter Run</p>
+        <h1>峡谷直升机</h1>
+        <p class="subcopy">按住左键或触控板爬升，松开后机身会更快下坠，尽可能飞得更远。</p>
+      </div>
+
+      <div class="meters">
+        <section class="meter-card" aria-label="当前里程">
+          <p class="meter-label">当前里程</p>
+          <div class="meter-dial">
+            <div class="meter-rings"></div>
+            <div class="meter-needle" id="currentNeedle"></div>
+            <div class="meter-center">
+              <span class="meter-value" id="currentDistance">0000</span>
+              <span class="meter-unit">m</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="meter-card" aria-label="历史最高里程">
+          <p class="meter-label">历史最高</p>
+          <div class="meter-dial meter-dial-best">
+            <div class="meter-rings"></div>
+            <div class="meter-needle" id="bestNeedle"></div>
+            <div class="meter-center">
+              <span class="meter-value" id="bestDistance">0000</span>
+              <span class="meter-unit">m</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </header>
+
+    <section class="arena-panel">
+      <canvas id="gameCanvas" aria-label="直升机飞行游戏画布"></canvas>
+
+      <div class="overlay overlay-visible" id="startOverlay">
+        <div class="overlay-card">
+          <p class="overlay-kicker">Ready</p>
+          <h2>按住开始飞行</h2>
+          <p>长按鼠标左键或触控板持续上升，松开后会迅速下降。</p>
+          <p>撞到路线边界或障碍物会爆出火花并结束本局。</p>
+          <p class="overlay-foot">首次点击会同时启动背景音乐。</p>
+        </div>
+      </div>
+
+      <div class="overlay" id="gameOverOverlay">
+        <div class="overlay-card overlay-card-danger">
+          <p class="overlay-kicker">Crash</p>
+          <h2>本局结束</h2>
+          <p id="finalDistanceText">本局飞行 0 m</p>
+          <p>单击鼠标左键或触控板，立即开始下一局。</p>
+        </div>
+      </div>
+
+      <div class="corner-status">
+        <span id="speedBadge">速度 0 km/h</span>
+        <span id="statusBadge">等待起飞</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>

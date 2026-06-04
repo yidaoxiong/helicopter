@@ -551,8 +551,8 @@ function updateRunning(dt) {
   state.distance += state.scrollSpeed * dt * 0.07;
   state.rotorAngle += dt * 22;
 
-  state.heli.velocityY += 1750 * dt;
-  state.heli.velocityY = clamp(state.heli.velocityY, -420, 620);
+  state.heli.velocityY += 1120 * dt;
+  state.heli.velocityY = clamp(state.heli.velocityY, -500, 430);
   state.heli.y += state.heli.velocityY * dt;
   state.heli.tilt = clamp(state.heli.velocityY * 0.0015, -0.38, 0.58);
 
@@ -841,7 +841,7 @@ async function onPrimaryPress(event) {
     resetGame();
   }
 
-  state.heli.velocityY = Math.max(state.heli.velocityY - 235, -420);
+  state.heli.velocityY = Math.max(state.heli.velocityY - 300, -500);
   state.heli.tilt = clamp(state.heli.velocityY * 0.0015, -0.48, 0.58);
 }
 

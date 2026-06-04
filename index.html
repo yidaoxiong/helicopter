@@ -13,7 +13,15 @@
       <div class="brand-block">
         <p class="eyebrow">Helicopter Run</p>
         <h1>峡谷直升机</h1>
-        <p class="subcopy">按住左键或触控板爬升，松开后机身会更快下坠，尽可能飞得更远。</p>
+        <p class="subcopy">轻点空格键给直升机一个向上的推力，连续点按来微调起飞和飞行高度。</p>
+        <div class="difficulty-panel" aria-label="难度选择">
+          <span class="difficulty-label">难度</span>
+          <div class="difficulty-options">
+            <button type="button" class="difficulty-button" data-difficulty="easy">轻松</button>
+            <button type="button" class="difficulty-button is-active" data-difficulty="normal">标准</button>
+            <button type="button" class="difficulty-button" data-difficulty="hard">极限</button>
+          </div>
+        </div>
       </div>
 
       <div class="meters">
@@ -49,10 +57,10 @@
       <div class="overlay overlay-visible" id="startOverlay">
         <div class="overlay-card">
           <p class="overlay-kicker">Ready</p>
-          <h2>按住开始飞行</h2>
-          <p>长按鼠标左键或触控板持续上升，松开后会迅速下降。</p>
-          <p>撞到路线边界或障碍物会爆出火花并结束本局。</p>
-          <p class="overlay-foot">首次点击会同时启动背景音乐。</p>
+          <h2>轻点空格开始飞行</h2>
+          <p>每按一次空格，直升机会获得一次上冲推力，连续点按可以细调飞行高度。</p>
+          <p>不同难度对应不同峡谷宽度，越难可通行空间越窄。</p>
+          <p class="overlay-foot">首次按下空格会同时启动背景音乐。</p>
         </div>
       </div>
 
@@ -61,7 +69,7 @@
           <p class="overlay-kicker">Crash</p>
           <h2>本局结束</h2>
           <p id="finalDistanceText">本局飞行 0 m</p>
-          <p>单击鼠标左键或触控板，立即开始下一局。</p>
+          <p>按空格键立刻重开，再次点按来调整起飞高度。</p>
         </div>
       </div>
 

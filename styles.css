@@ -103,6 +103,58 @@ body::before {
   font-size: 15px;
 }
 
+.difficulty-panel {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.difficulty-label {
+  color: var(--text-soft);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.difficulty-options {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.difficulty-button {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+  padding: 10px 15px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.difficulty-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(248, 184, 78, 0.42);
+}
+
+.difficulty-button.is-active {
+  background: linear-gradient(135deg, rgba(248, 184, 78, 0.28), rgba(255, 127, 63, 0.2));
+  border-color: rgba(248, 184, 78, 0.6);
+  color: #fff5dc;
+  box-shadow: 0 0 0 1px rgba(248, 184, 78, 0.08), 0 10px 24px rgba(248, 184, 78, 0.14);
+}
+
+.difficulty-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+}
+
 .meters {
   display: flex;
   gap: 14px;
@@ -296,6 +348,10 @@ body::before {
     width: min(40vw, 148px);
   }
 
+  .difficulty-panel {
+    align-items: flex-start;
+  }
+
   #gameCanvas {
     height: min(62vh, 620px);
   }
@@ -327,5 +383,10 @@ body::before {
   .subcopy,
   .overlay-card p {
     font-size: 14px;
+  }
+
+  .difficulty-button {
+    padding: 9px 13px;
+    font-size: 13px;
   }
 }

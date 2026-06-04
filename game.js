@@ -1,6 +1,5 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-const arenaPanel = document.querySelector(".arena-panel");
 
 const currentDistanceEl = document.getElementById("currentDistance");
 const bestDistanceEl = document.getElementById("bestDistance");
@@ -11,18 +10,58 @@ const gameOverOverlayEl = document.getElementById("gameOverOverlay");
 const finalDistanceTextEl = document.getElementById("finalDistanceText");
 const speedBadgeEl = document.getElementById("speedBadge");
 const statusBadgeEl = document.getElementById("statusBadge");
+const difficultyButtons = Array.from(document.querySelectorAll(".difficulty-button"));
 
-const BEST_SCORE_KEY = "helicopter-run-best-distance";
+const BEST_SCORE_KEY = "helicopter-run-best-distance-v2";
+
+const DIFFICULTY_PRESETS = {
+  easy: {
+    label: "轻松",
+    gapBaseScale: 0.36,
+    gapMinScale: 0.29,
+    gapMaxScale: 0.42
+  },
+  normal: {
+    label: "标准",
+    gapBaseScale: 0.3,
+    gapMinScale: 0.23,
+    gapMaxScale: 0.35
+  },
+  hard: {
+    label: "极限",
+    gapBaseScale: 0.25,
+    gapMinScale: 0.19,
+    gapMaxScale: 0.3
+  }
+};
+
+function readBestScores() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(BEST_SCORE_KEY) || "{}");
+    return {
+      easy: Number.parseInt(raw.easy || "0", 10) || 0,
+      normal: Number.parseInt(raw.normal || "0", 10) || 0,
+      hard: Number.parseInt(raw.hard || "0", 10) || 0
+    };
+  } catch {
+    return {
+      easy: 0,
+      normal: 0,
+      hard: 0
+    };
+  }
+}
 
 const state = {
   phase: "ready",
-  holding: false,
+  selectedDifficulty: "normal",
   width: 1280,
   height: 720,
   dpr: Math.max(1, Math.min(window.devicePixelRatio || 1, 2)),
   time: 0,
   distance: 0,
-  bestDistance: Number.parseInt(localStorage.getItem(BEST_SCORE_KEY) || "0", 10) || 0,
+  bestScores: readBestScores(),
+  bestDistance: 0,
   cameraX: 0,
   scrollSpeed: 260,
   terrain: [],
@@ -41,6 +80,8 @@ const state = {
     tilt: 0
   }
 };
+
+state.bestDistance = state.bestScores[state.selectedDifficulty];
 
 class AudioEngine {
   constructor() {
@@ -231,6 +272,10 @@ function resizeCanvas() {
   state.heli.x = state.width * 0.24;
 }
 
+function saveBestScores() {
+  localStorage.setItem(BEST_SCORE_KEY, JSON.stringify(state.bestScores));
+}
+
 function random(min, max) {
   return Math.random() * (max - min) + min;
 }
@@ -267,11 +312,39 @@ function setStatus(text) {
   statusBadgeEl.textContent = text;
 }
 
+function updateDifficultyButtons() {
+  for (const button of difficultyButtons) {
+    const isActive = button.dataset.difficulty === state.selectedDifficulty;
+    button.classList.toggle("is-active", isActive);
+    button.disabled = state.phase === "running";
+  }
+}
+
+function setDifficulty(level) {
+  if (!DIFFICULTY_PRESETS[level] || state.phase === "running") {
+    return;
+  }
+
+  state.selectedDifficulty = level;
+  state.bestDistance = state.bestScores[level] || 0;
+  updateDifficultyButtons();
+  updateMeters();
+  initializeTerrain();
+  state.heli.y = state.height * 0.5;
+  render();
+  setStatus(`${DIFFICULTY_PRESETS[level].label}难度，等待起飞`);
+}
+
 function initializeTerrain() {
+  const preset = DIFFICULTY_PRESETS[state.selectedDifficulty];
+  const minGap = Math.max(112, state.height * preset.gapMinScale);
+  const maxGap = Math.max(minGap + 22, state.height * preset.gapMaxScale);
+  const baseGap = clamp(state.height * preset.gapBaseScale, minGap, maxGap);
+
   state.terrain = [{
     x: 0,
     center: state.height * 0.5,
-    gap: Math.max(180, state.height * 0.28)
+    gap: baseGap
   }];
   state.lastObstacleX = state.width;
   generateTerrain(state.width * 3);
@@ -282,6 +355,9 @@ function initializeTerrain() {
 function generateTerrain(untilX) {
   let last = state.terrain[state.terrain.length - 1];
   let drift = 0;
+  const preset = DIFFICULTY_PRESETS[state.selectedDifficulty];
+  const minGap = Math.max(112, state.height * preset.gapMinScale);
+  const maxGap = Math.max(minGap + 22, state.height * preset.gapMaxScale);
 
   while (last.x < untilX) {
     const distanceFactor = Math.min(1, last.x / 8000);
@@ -290,8 +366,8 @@ function generateTerrain(untilX) {
 
     const nextGap = clamp(
       last.gap + random(-20, 20) - distanceFactor * 10,
-      Math.max(138, state.height * 0.22),
-      Math.max(240, state.height * 0.34)
+      minGap,
+      maxGap
     );
     const margin = 84;
     const centerMin = margin + nextGap / 2;
@@ -374,9 +450,10 @@ function resetGame() {
   state.heli.tilt = 0;
   initializeTerrain();
   updateMeters();
+  updateDifficultyButtons();
   setOverlayVisibility(startOverlayEl, false);
   setOverlayVisibility(gameOverOverlayEl, false);
-  setStatus("飞行中");
+  setStatus(`${DIFFICULTY_PRESETS[state.selectedDifficulty].label}难度飞行中`);
 }
 
 function spawnSparks(x, y, intensity = 20) {
@@ -402,13 +479,16 @@ function endRun(collisionPoint) {
   }
 
   state.phase = "gameover";
-  state.holding = false;
-  state.bestDistance = Math.max(state.bestDistance, Math.floor(state.distance));
-  localStorage.setItem(BEST_SCORE_KEY, String(state.bestDistance));
+  const score = Math.floor(state.distance);
+  const difficulty = state.selectedDifficulty;
+  state.bestScores[difficulty] = Math.max(state.bestScores[difficulty] || 0, score);
+  state.bestDistance = state.bestScores[difficulty];
+  saveBestScores();
   updateMeters();
-  finalDistanceTextEl.textContent = `本局飞行 ${Math.floor(state.distance)} m`;
+  updateDifficultyButtons();
+  finalDistanceTextEl.textContent = `${DIFFICULTY_PRESETS[difficulty].label}难度飞行 ${score} m`;
   setOverlayVisibility(gameOverOverlayEl, true);
-  setStatus("坠毁，点击重开");
+  setStatus("坠毁，按空格重开");
   spawnSparks(collisionPoint.x, collisionPoint.y, 28);
   audio.crash();
 }
@@ -471,9 +551,8 @@ function updateRunning(dt) {
   state.distance += state.scrollSpeed * dt * 0.07;
   state.rotorAngle += dt * 22;
 
-  const lift = state.holding ? -1380 : 2140;
-  state.heli.velocityY += lift * dt;
-  state.heli.velocityY = clamp(state.heli.velocityY, -360, 580);
+  state.heli.velocityY += 1750 * dt;
+  state.heli.velocityY = clamp(state.heli.velocityY, -420, 620);
   state.heli.y += state.heli.velocityY * dt;
   state.heli.tilt = clamp(state.heli.velocityY * 0.0015, -0.38, 0.58);
 
@@ -745,12 +824,11 @@ function loop(timestamp) {
 }
 
 async function onPrimaryPress(event) {
-  if (event.button !== undefined && event.button !== 0) {
+  if (event.code !== "Space" || event.repeat) {
     return;
   }
 
   event.preventDefault();
-  state.holding = true;
 
   if (!state.audioUnlocked) {
     state.audioUnlocked = true;
@@ -762,10 +840,9 @@ async function onPrimaryPress(event) {
   if (state.phase === "ready" || state.phase === "gameover") {
     resetGame();
   }
-}
 
-function onPrimaryRelease() {
-  state.holding = false;
+  state.heli.velocityY = Math.max(state.heli.velocityY - 235, -420);
+  state.heli.tilt = clamp(state.heli.velocityY * 0.0015, -0.48, 0.58);
 }
 
 function boot() {
@@ -773,16 +850,21 @@ function boot() {
   initializeTerrain();
   state.heli.y = state.height * 0.5;
   updateMeters();
+  updateDifficultyButtons();
   setOverlayVisibility(startOverlayEl, true);
   setOverlayVisibility(gameOverOverlayEl, false);
   speedBadgeEl.textContent = "速度 0 km/h";
-  setStatus("等待起飞");
+  setStatus("标准难度，等待起飞");
 
-  arenaPanel.addEventListener("pointerdown", onPrimaryPress);
-  window.addEventListener("pointerup", onPrimaryRelease);
-  window.addEventListener("pointercancel", onPrimaryRelease);
-  canvas.addEventListener("contextmenu", (event) => event.preventDefault());
-  window.addEventListener("blur", onPrimaryRelease);
+  window.addEventListener("keydown", onPrimaryPress);
+  window.addEventListener("keyup", (event) => {
+    if (event.code === "Space") {
+      event.preventDefault();
+    }
+  });
+  for (const button of difficultyButtons) {
+    button.addEventListener("click", () => setDifficulty(button.dataset.difficulty));
+  }
   window.addEventListener("resize", () => {
     resizeCanvas();
     if (state.phase !== "running") {
